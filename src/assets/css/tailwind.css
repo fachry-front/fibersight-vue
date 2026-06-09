@@ -1,0 +1,252 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ══════════════════════════════════════════
+   FIBERSIGHT — Global Base Styles
+══════════════════════════════════════════ */
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body, #app {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #131210;
+    color: #e3e1dc;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    line-height: 1.55;
+    overflow: hidden;
+  }
+
+  ::-webkit-scrollbar       { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(160,158,140,0.22); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(160,158,140,0.38); }
+}
+
+@layer components {
+  /* ── Layout shells ── */
+  .app-shell     { @apply flex h-screen overflow-hidden; }
+  .main-wrap     { @apply flex flex-col flex-1 min-w-0 overflow-hidden; }
+  .page-area     { @apply flex-1 overflow-y-auto overflow-x-hidden p-5; }
+
+  /* ── Card base ── */
+  .card {
+    @apply rounded-xl p-4 transition-all duration-200;
+    background: #1c1a16;
+    border: 1px solid rgba(160,158,140,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px rgba(160,158,140,0.06);
+  }
+  .card:hover {
+    border-color: rgba(160,158,140,0.18);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 0 1px rgba(160,158,140,0.12);
+  }
+  .card-header {
+    @apply flex items-center justify-between mb-3;
+  }
+  .card-title   { @apply text-xs font-semibold font-mono tracking-wide uppercase text-text-muted; }
+
+  /* ── Badge ── */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wide;
+  }
+  .badge::before   { content: '●'; font-size: 7px; }
+  .badge-normal    { background: rgba(98,160,80,0.15);  color: #7aad68; }
+  .badge-warning   { background: rgba(196,162,62,0.15); color: #c4a23e; }
+  .badge-critical  { background: rgba(196,82,82,0.18);  color: #e06464; }
+  .badge-offline   { background: rgba(90,90,80,0.18);   color: #767068; }
+
+  /* ── Button ── */
+  .btn {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+           transition-all duration-150 cursor-pointer select-none;
+    background: #1c1a16;
+    border: 1px solid rgba(160,158,140,0.12);
+    color: #9a9688;
+  }
+  .btn:hover {
+    border-color: rgba(160,158,140,0.25);
+    color: #e3e1dc;
+    background: #242118;
+  }
+  .btn-primary {
+    background: #c4a23e !important;
+    border-color: #c4a23e !important;
+    color: #131210 !important;
+    font-weight: 700 !important;
+  }
+  .btn-primary:hover { opacity: 0.88 !important; }
+  .btn-danger  { border-color: rgba(196,82,82,0.4) !important; color: #e06464 !important; }
+  .btn-danger:hover  { background: rgba(196,82,82,0.12) !important; }
+  .btn-xs { @apply px-2 py-0.5 text-[10px] rounded-md; }
+
+  .btn-group        { @apply flex rounded-lg overflow-hidden; border: 1px solid rgba(160,158,140,0.12); }
+  .btn-group .btn   { @apply rounded-none; border: none; border-right: 1px solid rgba(160,158,140,0.1); }
+  .btn-group .btn:last-child { border-right: none; }
+  .btn-group .btn.active { background: #242118; color: #e3e1dc; }
+
+  /* ── Filter tabs ── */
+  .filter-tab {
+    @apply px-3 py-1 rounded-md text-[10px] font-mono cursor-pointer transition-all duration-150;
+    border: 1px solid rgba(160,158,140,0.1);
+    color: #565248;
+    background: transparent;
+  }
+  .filter-tab:hover  { border-color: rgba(160,158,140,0.22); color: #9a9688; }
+  .filter-tab.active { background: #242118; border-color: rgba(160,158,140,0.22); color: #e3e1dc; }
+
+  /* ── Nav sidebar ── */
+  .nav-item {
+    @apply flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer
+           text-[13px] transition-all duration-150 relative select-none;
+    color: #9a9688;
+  }
+  .nav-item:hover   { background: rgba(160,158,140,0.07); color: #e3e1dc; }
+  .nav-item.active  { background: rgba(160,158,140,0.09); color: #e3e1dc; font-weight: 500; }
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2.5px;
+    background: #c4a23e;
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* ── Data table ── */
+  .data-table         { @apply w-full border-collapse; }
+  .data-table th      { @apply text-left py-2 px-3 text-[10px] font-mono tracking-wide uppercase;
+                        color: #565248; border-bottom: 1px solid rgba(160,158,140,0.1); }
+  .data-table td      { @apply py-2.5 px-3 text-xs; border-bottom: 1px solid rgba(160,158,140,0.05); }
+  .data-table tr:hover td { background: rgba(255,255,255,0.015); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .td-mono   { @apply font-mono text-[11px]; }
+  .td-crit   { @apply font-mono text-[11px] font-bold; color: #e06464; }
+  .td-warn   { @apply font-mono text-[11px]; color: #c4a23e; }
+  .td-ok     { @apply font-mono text-[11px]; color: #7aad68; }
+
+  /* ── Form ── */
+  .form-label  { @apply block text-[10px] font-mono tracking-wide uppercase mb-1.5; color: #565248; }
+  .form-input  {
+    @apply w-full rounded-lg px-3 py-2 text-xs outline-none transition-colors duration-150;
+    background: #131210;
+    border: 1px solid rgba(160,158,140,0.12);
+    color: #e3e1dc;
+    font-family: inherit;
+  }
+  .form-input:focus { border-color: rgba(196,162,62,0.5); }
+  .form-input::placeholder { color: #565248; }
+  .form-input option { background: #1c1a16; }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    @apply fixed inset-0 z-[200] flex items-center justify-center;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(5px);
+  }
+  .modal-box {
+    @apply rounded-2xl p-6 w-[440px] max-w-[94vw];
+    background: #1c1a16;
+    border: 1px solid rgba(160,158,140,0.15);
+    animation: slide-up 0.2s ease forwards;
+  }
+  .modal-title { @apply text-base font-bold mb-4; font-family: 'Plus Jakarta Sans'; }
+
+  /* ── Toast ── */
+  .toast {
+    @apply fixed bottom-5 right-5 z-[300] px-4 py-2.5 rounded-xl text-xs;
+    background: #242118;
+    border: 1px solid rgba(160,158,140,0.2);
+    color: #e3e1dc;
+    animation: toast-in 0.2s ease forwards;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+
+  /* ── Toggle ── */
+  .toggle-track {
+    @apply relative w-9 h-5 rounded-full cursor-pointer transition-colors duration-200 flex-shrink-0;
+    background: #131210;
+    border: 1px solid rgba(160,158,140,0.15);
+  }
+  .toggle-track.on { background: #7aad68; border-color: #7aad68; }
+  .toggle-thumb {
+    @apply absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200;
+  }
+  .toggle-track.on .toggle-thumb { transform: translateX(16px); }
+
+  /* ── Stat card ── */
+  .stat-card {
+    @apply card relative overflow-hidden cursor-default;
+  }
+  .stat-card::after {
+    content: '';
+    @apply absolute bottom-0 left-0 right-0 h-0.5;
+    background: var(--accent, rgba(160,158,140,0.12));
+  }
+  .stat-val  { font-family: 'Plus Jakarta Sans'; @apply text-2xl font-bold leading-tight; }
+  .stat-lbl  { @apply text-[10px] font-mono tracking-wide uppercase; color: #565248; }
+  .stat-delta { @apply text-[10px] flex items-center gap-1 mt-0.5; color: #565248; }
+
+  /* ── Power bar ── */
+  .bar-track { @apply w-full h-1.5 rounded-full overflow-hidden; background: rgba(255,255,255,0.06); }
+  .bar-fill  { @apply h-full rounded-full transition-[width] duration-500; }
+
+  /* ── Alarm item ── */
+  .alarm-item {
+    @apply flex items-start gap-2.5 py-2.5 border-b last:border-b-0;
+    border-color: rgba(160,158,140,0.07);
+  }
+
+  /* ── Event item ── */
+  .event-item {
+    @apply flex items-start gap-2 py-2 border-b last:border-b-0;
+    border-color: rgba(160,158,140,0.07);
+  }
+
+  /* ── Topology node ── */
+  .topo-node {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono
+           cursor-pointer transition-all duration-150;
+    background: #131210;
+    border: 1px solid rgba(160,158,140,0.12);
+  }
+  .topo-node:hover { border-color: rgba(160,158,140,0.25); }
+  .topo-node.olt      { border-color: rgba(196,162,62,0.35); }
+  .topo-node.normal   { border-color: rgba(122,173,104,0.3); }
+  .topo-node.warning  { border-color: rgba(196,162,62,0.35); }
+  .topo-node.critical { border-color: rgba(196,82,82,0.45); background: rgba(196,82,82,0.07); }
+
+  .topo-dot { @apply w-1.5 h-1.5 rounded-full flex-shrink-0; }
+  .topo-dot.normal   { background: #7aad68; }
+  .topo-dot.warning  { background: #c4a23e; }
+  .topo-dot.critical { background: #e06464; @apply animate-pulse; }
+
+  /* ── Page header ── */
+  .page-hdr        { @apply flex items-center justify-between mb-4; }
+  .page-title      { @apply text-lg font-bold; font-family: 'Plus Jakarta Sans'; }
+  .page-subtitle   { @apply text-[10px] font-mono mt-0.5; color: #565248; }
+  .view-all-link   { @apply text-[10px] font-mono cursor-pointer; color: #c4a23e; }
+  .view-all-link:hover { color: #e3e1dc; }
+
+  /* ── Device grid card ── */
+  .device-card {
+    @apply card cursor-pointer;
+  }
+  .device-card.selected { border-color: #c4a23e !important; box-shadow: 0 0 0 1px rgba(196,162,62,0.25) !important; }
+}
+
+@layer utilities {
+  .text-crit    { color: #e06464; }
+  .text-warn    { color: #c4a23e; }
+  .text-ok      { color: #7aad68; }
+  .text-gold    { color: #c4a23e; }
+  .text-teal    { color: #4a9080; }
+  .font-display { font-family: 'Plus Jakarta Sans', sans-serif; }
+  .bg-base      { background: #131210; }
+  .bg-card      { background: #1c1a16; }
+  .bg-surface   { background: #1c1a16; }
+  .border-default { border-color: rgba(160,158,140,0.1); }
+}
