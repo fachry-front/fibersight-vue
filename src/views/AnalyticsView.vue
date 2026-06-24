@@ -1,12 +1,17 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useDeviceStore, getRxClass } from '@/store/useDeviceStore.js'
 import BaseBadge from '@/components/common/BaseBadge.vue'
 
-const store    = useDeviceStore()
-const timeRange = ref('1H')
+const store      = useDeviceStore()
+const timeRange  = ref('1H')
+const chartReady = ref(false)
 
-onMounted(() => store.startLiveSimulation())
+onMounted(async () => {
+  await nextTick()
+  chartReady.value = true
+  store.startLiveSimulation()
+})
 onUnmounted(() => store.stopLiveSimulation())
 
 // Multi-device trend series from FIFO histories
@@ -15,16 +20,11 @@ const PALETTE = ['#c45252','#7aad68','#c4a23e','#4a9080','#c47030']
 const trendSeries = computed(() => {
   return store.odps.slice(0, 5).map((d, i) => ({
     name: d.id,
-    data: store.getDeviceHistory(d.id).map(p => parseFloat(p.value))
+    data: store.getDeviceHistory(d.id).map(p => ({
+      x: p.time,
+      y: parseFloat(p.value)
+    }))
   }))
-})
-
-const trendCategories = computed(() => {
-  const first = store.odps[0]
-  if (!first) return []
-  return (store.getDeviceHistory(first.id) || []).map(p =>
-    new Date(p.time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-  )
 })
 
 const trendOptions = computed(() => ({
@@ -40,9 +40,14 @@ const trendOptions = computed(() => ({
   colors: PALETTE,
   grid: { borderColor: 'rgba(160,158,140,0.08)', strokeDashArray: 3 },
   xaxis: {
-    categories: trendCategories.value,
-    labels: { style: { colors: '#565248', fontSize: '9px', fontFamily: 'Space Mono' }, rotate: 0 },
+    type: 'datetime',
+    labels: {
+      style: { colors: '#565248', fontSize: '9px', fontFamily: 'Space Mono' },
+      rotate: 0,
+      datetimeFormatter: { hour: '2-digit', minute: '2-digit' }
+    },
     axisBorder: { show: false }, axisTicks: { show: false }, tickAmount: 8,
+    tooltip: { enabled: false },
   },
   yaxis: {
     min: -38, max: -5,
@@ -132,14 +137,14 @@ function fmtTime(ts) {
         </div>
       </div>
       <div style="height:260px">
-        <apexchart type="line" height="260"
+        <apexchart v-if="chartReady" type="line" height="260"
                    :options="trendOptions"
                    :series="trendSeries" />
       </div>
     </div>
 
     <!-- Bottom row -->
-    <div class="grid grid-cols-2 gap-3">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
 
       <!-- Worst Performers -->
       <div class="card">
@@ -176,7 +181,7 @@ function fmtTime(ts) {
           </div>
         </div>
         <div style="height:220px">
-          <apexchart type="bar" height="220"
+          <apexchart v-if="chartReady" type="bar" height="220"
                      :options="tempOptions"
                      :series="tempSeries" />
         </div>

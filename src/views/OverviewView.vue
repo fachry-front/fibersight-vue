@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, computed } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useDeviceStore } from '@/store/useDeviceStore.js'
 import { useAlarmStore }  from '@/store/useAlarmStore.js'
 
@@ -14,66 +14,90 @@ import DeviceTable  from '@/components/dashboard/DeviceTable.vue'
 const deviceStore = useDeviceStore()
 const alarmStore  = useAlarmStore()
 
-// Start live simulation on mount, stop on unmount
-onMounted(() => {
+onMounted(async () => {
+  // 1. Fetch data awal dari backend
+  await deviceStore.fetchDevices()
+  await alarmStore.syncFromDevices()
+
+  // 2. Sambungkan WebSocket untuk live update
   deviceStore.startLiveSimulation()
-  // Sync alarms every 5 sec
-  const alarmTimer = setInterval(() => alarmStore.syncFromDevices(), 5000)
-  alarmStore.syncFromDevices()
-  // Save timer to clear
-  window.__alarmTimer = alarmTimer
+
+  // 3. Sync alarm tiap 8 detik
+  window.__alarmTimer = setInterval(() => alarmStore.syncFromDevices(), 8000)
 })
 
 onUnmounted(() => {
   deviceStore.stopLiveSimulation()
   clearInterval(window.__alarmTimer)
 })
-
-function nowStr() {
-  return new Date().toLocaleString('id-ID', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit', second: '2-digit'
-  })
-}
 </script>
 
 <template>
-  <div class="space-y-3">
+  <div class="space-y-4">
 
-    <!-- Page Header -->
-    <div class="page-hdr">
+    <!-- Loading state -->
+    <div v-if="deviceStore.loading"
+         class="flex items-center justify-center py-20 gap-3">
+      <div class="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
+           style="border-color:var(--accent-gold);border-top-color:transparent"></div>
+      <span class="text-sm font-mono" style="color:var(--text-muted)">
+        Memuat data dari backend...
+      </span>
+    </div>
+
+    <!-- Error state -->
+    <div v-else-if="deviceStore.error"
+         class="card flex items-center gap-3 py-6"
+         style="border-color:rgba(194,80,80,0.3);background:rgba(194,80,80,0.05)">
+      <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" style="color:var(--critical-text)">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
       <div>
-        <div class="page-title">Overview</div>
-        <div class="page-subtitle">Real-time Optical Network Dashboard</div>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="btn-group">
-          <button class="btn btn-xs active">Last 1 Hour</button>
-          <button class="btn btn-xs">6H</button>
-          <button class="btn btn-xs">24H</button>
+        <div class="text-sm font-semibold" style="color:var(--critical-text)">
+          Gagal konek ke backend
         </div>
-        <button class="btn btn-xs">↺ Refresh</button>
+        <div class="text-xs mt-1" style="color:var(--text-muted)">
+          Pastikan backend berjalan di http://localhost:3000 — Error: {{ deviceStore.error }}
+        </div>
       </div>
+      <button class="btn btn-xs ml-auto" @click="deviceStore.fetchDevices()">↺ Retry</button>
     </div>
 
-    <!-- Row 1: Stat Cards (staggered animation via v-motion in StatCards) -->
-    <StatCards />
+    <!-- Dashboard content -->
+    <template v-else>
+      <div class="page-hdr">
+        <div>
+          <div class="page-title">Overview</div>
+          <div class="page-subtitle">Real-time Optical Network Dashboard</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="btn-group">
+            <button class="btn btn-xs active">1H</button>
+            <button class="btn btn-xs">6H</button>
+            <button class="btn btn-xs">24H</button>
+          </div>
+          <button class="btn btn-xs" @click="deviceStore.fetchDevices()">↺ Refresh</button>
+        </div>
+      </div>
 
-    <!-- Row 2: PowerChart | Topology | AlarmCenter -->
-    <div class="grid gap-3" style="grid-template-columns:1.9fr 1.3fr 1fr">
-      <div style="min-height:250px"><PowerChart /></div>
-      <div style="min-height:250px"><TopologyTree /></div>
-      <div style="min-height:250px"><AlarmCenter /></div>
-    </div>
+      <StatCards/>
 
-    <!-- Row 3: InsightsRing + FiberMap -->
-    <div class="grid gap-3" style="grid-template-columns:1fr 1.2fr">
-      <InsightsRing />
-      <div style="min-height:200px"><FiberMap /></div>
-    </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div class="md:col-span-2 xl:col-span-1"><PowerChart/></div>
+        <TopologyTree/>
+        <AlarmCenter/>
+      </div>
 
-    <!-- Row 4: Device Table -->
-    <DeviceTable />
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <InsightsRing/>
+        <FiberMap/>
+      </div>
+
+      <DeviceTable/>
+    </template>
 
   </div>
 </template>

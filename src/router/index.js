@@ -1,11 +1,14 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 
-import OverviewView  from '@/views/OverviewView.vue'
-import DevicesView   from '@/views/DevicesView.vue'
-import AnalyticsView from '@/views/AnalyticsView.vue'
-import AlertsView    from '@/views/AlertsView.vue'
-import TopologyView  from '@/views/TopologyView.vue'
-import SettingsView  from '@/views/SettingsView.vue'
+// ── Lazy-loaded routes (Day 17: code splitting) ──
+// Setiap view dibungkus dynamic import() sehingga Vite memisahkannya
+// menjadi chunk terpisah, dimuat hanya saat route diakses.
+const OverviewView  = () => import('@/views/OverviewView.vue')
+const DevicesView   = () => import('@/views/DevicesView.vue')
+const AnalyticsView = () => import('@/views/AnalyticsView.vue')
+const AlertsView    = () => import('@/views/AlertsView.vue')
+const TopologyView  = () => import('@/views/TopologyView.vue')
+const SettingsView  = () => import('@/views/SettingsView.vue')
 
 const routes = [
   {

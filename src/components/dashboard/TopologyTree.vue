@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useDeviceStore } from '@/store/useDeviceStore.js'
 
 const store     = useDeviceStore()
@@ -15,7 +15,8 @@ const STATUS_COLOR = {
 }
 
 async function buildNetwork() {
-  if (!container.value) return
+  await nextTick()
+  if (!container.value || !document.body.contains(container.value)) return
   const { Network, DataSet } = await import('vis-network/standalone/esm/vis-network.min.js')
 
   const nodes = []
@@ -95,11 +96,17 @@ async function buildNetwork() {
   })
 }
 
-onMounted(() => { buildNetwork() })
+onMounted(async () => {
+  await nextTick()
+  buildNetwork()
+})
 onUnmounted(() => { if (network) { network.destroy(); network = null } })
 
 // Rebuild when device data changes
-watch(() => store.devices.map(d => d.status + d.rxPower).join(), () => { buildNetwork() })
+watch(
+  () => store.devices.map(d => d.status + d.rxPower).join(),
+  async () => { await buildNetwork() }
+)
 </script>
 
 <template>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useDeviceStore } from '@/store/useDeviceStore.js'
 
 const store = useDeviceStore()
@@ -33,7 +33,17 @@ function makeIcon(status, L) {
 }
 
 async function initLeafletMap() {
-  if (!mapContainer.value) return
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    await nextTick()
+    if (mapContainer.value && document.body.contains(mapContainer.value)) break
+    await new Promise(resolve => setTimeout(resolve, 50))
+  }
+
+  if (!mapContainer.value || !document.body.contains(mapContainer.value)) {
+    mapError.value = true
+    return drawFallbackMap()
+  }
+
   try {
     L = await import('leaflet')
     L = L.default || L
@@ -152,7 +162,10 @@ watch(() => store.selectedDeviceId, (id) => {
   if (marker) setTimeout(() => marker.openPopup(), 1300)
 })
 
-onMounted(() => { initLeafletMap() })
+onMounted(async () => {
+  await nextTick()
+  initLeafletMap()
+})
 </script>
 
 <template>

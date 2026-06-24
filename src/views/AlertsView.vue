@@ -48,7 +48,7 @@ function fmtTime(ts) {
     </div>
 
     <!-- Summary -->
-    <div class="grid grid-cols-4 gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <div class="card stat-card" style="--accent:#c45252">
         <div class="stat-lbl">Critical</div>
         <div class="stat-val text-crit">{{ critAlarms.length }}</div>
@@ -72,7 +72,7 @@ function fmtTime(ts) {
     </div>
 
     <!-- Two-column alarm list -->
-    <div class="grid grid-cols-2 gap-3">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
 
       <!-- Critical -->
       <div class="card">

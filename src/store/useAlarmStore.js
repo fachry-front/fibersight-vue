@@ -1,53 +1,72 @@
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
-import { useDeviceStore, getStatus } from './useDeviceStore.js'
+import { ref, computed } from 'vue'
+import deviceApi from '@/services/deviceApi'
+
+function loadThresholds() {
+  try {
+    const saved = localStorage.getItem('fibersight_settings_thresholds')
+    if (!saved) return {
+      rxCritical: -28, rxWarning: -24,
+      tempCritical: 65, tempWarning: 55,
+    }
+    return { ...{
+      rxCritical: -28, rxWarning: -24,
+      tempCritical: 65, tempWarning: 55,
+    }, ...JSON.parse(saved) }
+  } catch {
+    return {
+      rxCritical: -28, rxWarning: -24,
+      tempCritical: 65, tempWarning: 55,
+    }
+  }
+}
 
 export const useAlarmStore = defineStore('alarm', () => {
   const alarms       = ref([])
   const acknowledged = ref(new Set())
 
-  // ── Computed ──
   const critical   = computed(() => alarms.value.filter(a => a.type === 'Critical'))
   const warnings   = computed(() => alarms.value.filter(a => a.type === 'Warning'))
   const unackCount = computed(() =>
     alarms.value.filter(a => !acknowledged.value.has(a.id)).length
   )
 
-  // ── Build alarms from device store ──
-  function syncFromDevices() {
-    const deviceStore = useDeviceStore()
-    const newAlarms = deviceStore.devices
-      .filter(d => d.status === 'Critical' || d.status === 'Warning')
-      .map(d => ({
-        id:       d.id,
-        type:     d.status,
-        device:   d.id,
-        detail:   buildDetail(d),
-        location: d.location,
-        time:     d.lastSeen,
-        rxPower:  d.rxPower,
-      }))
+  async function syncFromDevices() {
+    try {
+      const devices = await deviceApi.getDevices(true)
+      const thresholds = loadThresholds()
 
-    // Merge — keep existing ack state, add new alarms at top
-    newAlarms.forEach(a => {
-      const exists = alarms.value.find(x => x.id === a.id)
-      if (!exists) {
-        alarms.value.unshift(a)
-      } else {
-        Object.assign(exists, a)
-      }
-    })
+      alarms.value = devices.flatMap(device => {
+        const rx = parseFloat(device.rxPower)
+        const temp = parseFloat(device.temperature)
+        const type = rx <= thresholds.rxCritical || temp >= thresholds.tempCritical
+          ? 'Critical'
+          : (rx < thresholds.rxWarning || temp >= thresholds.tempWarning)
+            ? 'Warning'
+            : null
 
-    // Remove resolved alarms (back to Normal)
-    const problemIds = new Set(newAlarms.map(a => a.id))
-    alarms.value = alarms.value.filter(a => problemIds.has(a.id))
-  }
+        if (!type) return []
 
-  function buildDetail(d) {
-    if (d.status === 'Critical') return `Rx Power: ${d.rxPower} dBm — Signal critical`
-    if (d.temperature > 60)     return `High Temperature: ${d.temperature}°C`
-    if (d.rxPower < -24)        return `Rx Power: ${d.rxPower} dBm — Degraded signal`
-    return `Packet Loss detected — monitor closely`
+        const detail = type === 'Critical'
+          ? rx <= thresholds.rxCritical
+            ? `Rx Power: ${rx} dBm — Signal critical`
+            : `Temperature: ${temp}°C — Critical heat`
+          : rx < thresholds.rxWarning
+            ? `Rx Power: ${rx} dBm — Signal degraded`
+            : `Temperature: ${temp}°C — High heat`
+
+        return [{
+          id: `${device.id}-${type}`,
+          device: device.id,
+          type,
+          detail,
+          location: device.location,
+          time: device.lastSeen || new Date().toISOString(),
+        }]
+      })
+    } catch (err) {
+      console.error('syncFromDevices error:', err.message)
+    }
   }
 
   function acknowledge(id) {
@@ -72,11 +91,8 @@ export const useAlarmStore = defineStore('alarm', () => {
     })
   }
 
-  // Init
-  syncFromDevices()
-
   return {
     alarms, critical, warnings, unackCount,
-    syncFromDevices, acknowledge, acknowledgeAll, isAcknowledged, formatTime
+    syncFromDevices, acknowledge, acknowledgeAll, isAcknowledged, formatTime,
   }
 })
