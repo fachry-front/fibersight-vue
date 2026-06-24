@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="40" viewBox="0 0 120 40">
+  <rect width="120" height="40" rx="6" fill="#1c1a16"/>
+  <rect x="6" y="6" width="28" height="28" rx="5" fill="#c4a23e"/>
+  <path d="M12 20 L18 12 L22 26 L26 16 L30 20" stroke="#131210" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="42" y="24" font-family="Plus Jakarta Sans, sans-serif" font-size="13" font-weight="700" fill="#e3e1dc">FiberSight</text>
+</svg>
